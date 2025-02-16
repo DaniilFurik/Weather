@@ -7,5 +7,6 @@ target 'Weather' do
 
   # Pods for Weather
   pod 'SnapKit'
+  pod 'Kingfisher'
   
 end

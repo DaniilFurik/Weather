@@ -21,7 +21,7 @@ private enum Components: String {
 }
 
 private enum QueryParams: String {
-    case param = "?id=625144&units=metric&appid="
+    case param = "?id=625144&units=metric&appid=a4c07d539a160c1d5ec3a597937067ca"
 }
 
 private enum RequestType: String {
