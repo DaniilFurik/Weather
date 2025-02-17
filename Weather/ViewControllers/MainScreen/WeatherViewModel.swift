@@ -21,6 +21,7 @@ protocol IWeatherViewModel {
     
     var currentWeather: ((CurrentWeather) -> Void)? { get set }
     var forecastWeather: ((ForecastResponse) -> Void)? { get set }
+    var showToast: ((String) -> Void)? { get set }
 }
 
 // MARK: - Class
@@ -30,6 +31,7 @@ final class WeatherViewModel: IWeatherViewModel {
         
     var currentWeather: ((CurrentWeather) -> Void)?
     var forecastWeather: ((ForecastResponse) -> Void)?
+    var showToast: ((String) -> Void)?
     
     private let service = WeatherService()
     private let locationManager = LocationManager()
@@ -39,16 +41,16 @@ extension WeatherViewModel {
     // MARK: - Methods
     
     func loadWeatherData() {
-        locationManager.getCurrentLocation { coordinate in
+        locationManager.getCurrentLocation { [weak self] coordinate in
             if let coordinate {
-                if true { // Check internet connection
-                    self.getCurrentWeather(coord: coordinate)
-                    self.getForecastWeather(coord: coordinate)
+                if NetworkManager.shared.isConnected {
+                    self?.getCurrentWeather(coord: coordinate)
+                    self?.getForecastWeather(coord: coordinate)
                 } else {
-                    // show internet error
+                    self?.showToast?(GlobalConstants.connectionError)
                 }
             } else {
-                print("Не удалось получить координаты")
+                self?.showToast?(GlobalConstants.coordinatesError)
             }
         }
     }
@@ -64,7 +66,7 @@ private extension WeatherViewModel {
             if let weather = self?.getFormattedWeather(result) {
                 self?.currentWeather?(weather)
             } else {
-                // show error
+                self?.showToast?(GlobalConstants.unknownError)
             }
         }
     }
@@ -76,7 +78,7 @@ private extension WeatherViewModel {
             if let result {
                 self?.forecastWeather?(result)
             } else {
-                // show error
+                self?.showToast?(GlobalConstants.unknownError)
             }
         }
     }

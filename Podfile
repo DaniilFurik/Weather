@@ -8,5 +8,6 @@ target 'Weather' do
   # Pods for Weather
   pod 'SnapKit'
   pod 'Kingfisher'
+  pod 'Toast-Swift', '~> 5.1.1'
   
 end

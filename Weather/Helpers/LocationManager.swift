@@ -34,7 +34,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Ошибка получения координат: \(error.localizedDescription)")
+        print("\(GlobalConstants.connectionError): \(error.localizedDescription)")
         completion?(nil)
         completion = nil
     }
@@ -55,7 +55,7 @@ extension LocationManager {
         case .authorizedWhenInUse, .authorizedAlways:
             locationManager.startUpdatingLocation() // Начинаем получать координаты
         case .denied, .restricted:
-            print("Доступ запрещен пользователем или ограничен")
+            print(GlobalConstants.noLocationAccess)
             completion?(nil)
             completion = nil
         @unknown default:

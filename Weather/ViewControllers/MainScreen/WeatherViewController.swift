@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Toast_Swift
 
 class WeatherViewController: UIViewController {
     // MARK: - Properties
@@ -60,6 +61,10 @@ private extension WeatherViewController {
             print(forecast.city.country)
             print(forecast.list.count)
             print()
+        }
+        
+        weatherViewModel.showToast = { [weak self] message in
+            self?.view.makeToast(message)
         }
     }
 }
