@@ -15,5 +15,5 @@
 //https://openweathermap.org/img/wn/10d@2x.png
 
 final class GlobalConstants {
-
+    static let appID = "a4c07d539a160c1d5ec3a597937067ca"
 }

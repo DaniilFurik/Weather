@@ -6,17 +6,17 @@
 //
 
 final class WeatherResponse: Decodable {
-    let coord: Coord
+    let name: String
     let weather: [Weather]
+    let dt: Int
+    let sys: Sys
+    let coord: Coord
     let base: String
     let main: Main
     let visibility: Int
     let wind: Wind
     let clouds: Clouds
-    let dt: Int
-    let sys: Sys
     let timezone: Int
     let id: Int
-    let name: String
     let cod: Int
 }
