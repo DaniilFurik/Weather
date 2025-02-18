@@ -20,7 +20,7 @@ protocol IWeatherViewModel {
     func loadWeatherData()
     
     var currentWeather: ((CurrentWeather) -> Void)? { get set }
-    var forecastWeather: ((ForecastResponse) -> Void)? { get set }
+    var forecastWeather: (([ForecastWeather]) -> Void)? { get set }
     var showToast: ((String) -> Void)? { get set }
 }
 
@@ -30,7 +30,7 @@ final class WeatherViewModel: IWeatherViewModel {
     // MARK: - Properties
         
     var currentWeather: ((CurrentWeather) -> Void)?
-    var forecastWeather: ((ForecastResponse) -> Void)?
+    var forecastWeather: (([ForecastWeather]) -> Void)?
     var showToast: ((String) -> Void)?
     
     private let service = WeatherService()
@@ -41,20 +41,23 @@ extension WeatherViewModel {
     // MARK: - Methods
     
     func loadWeatherData() {
-        locationManager.getCurrentLocation { [weak self] coordinate in
-            if let coordinate {
-                if NetworkManager.shared.isConnected {
-                    self?.getCurrentWeather(coord: coordinate)
-                    self?.getForecastWeather(coord: coordinate)
-                } else {
-                    self?.showToast?(GlobalConstants.connectionError)
+        NetworkManager.shared.onStatusChange = { [weak self] isConnected in
+            if isConnected {
+                self?.locationManager.getCurrentLocation { [weak self] coordinate in
+                    if let coordinate {
+                        self?.getCurrentWeather(coord: coordinate)
+                        self?.getForecastWeather(coord: coordinate)
+                    } else {
+                        self?.showToast?(GlobalConstants.coordinatesError)
+                    }
                 }
             } else {
-                self?.showToast?(GlobalConstants.coordinatesError)
+                self?.showToast?(GlobalConstants.connectionError)
             }
         }
     }
 }
+    
 
 private extension WeatherViewModel {
     // MARK: - Private Methods
@@ -75,12 +78,32 @@ private extension WeatherViewModel {
         let queryParams = getQueryParams(coord: coord)
         
         service.getForecastWeather(queryParams: queryParams) { [weak self] result in
-            if let result {
-                self?.forecastWeather?(result)
+            if let forecast = self?.getFormattedForecast(result) {
+                self?.forecastWeather?(forecast)
             } else {
                 self?.showToast?(GlobalConstants.unknownError)
             }
         }
+    }
+    
+    func getFormattedForecast(_ forecast: ForecastResponse?) -> [ForecastWeather]? {
+        if let forecast {
+            var array = [ForecastWeather]()
+            
+            for item in forecast.list {
+                array.append(ForecastWeather(
+                    temp: item.main.temp,
+                    hum: item.main.humidity,
+                    dateTime: Date(timeIntervalSince1970: TimeInterval(item.dt)),
+                    description: item.weather[.zero].description,
+                    icon: item.weather[.zero].icon
+                ))
+            }
+            
+            return array
+        }
+        
+        return nil
     }
     
     func getFormattedWeather(_ weather: WeatherResponse?) -> CurrentWeather? {

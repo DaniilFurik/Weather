@@ -8,5 +8,9 @@
 import Foundation
 
 struct ForecastWeather {
-    
+    let temp: Double
+    let hum: Int
+    let dateTime: Date
+    let description: String
+    let icon: String
 }

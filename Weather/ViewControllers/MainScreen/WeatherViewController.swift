@@ -56,11 +56,15 @@ private extension WeatherViewController {
             print()
         }
         
-        weatherViewModel.forecastWeather = { /*[weak self]*/ forecast in
-            print(forecast.cnt)
-            print(forecast.city.country)
-            print(forecast.list.count)
-            print()
+        weatherViewModel.forecastWeather = { /*[weak self]*/ forecastArray in
+            for forecast in forecastArray {
+                print(forecast.dateTime)
+                print(forecast.description)
+                print(forecast.icon)
+                print(forecast.hum)
+                print(forecast.temp)
+                print()
+            }
         }
         
         weatherViewModel.showToast = { [weak self] message in
