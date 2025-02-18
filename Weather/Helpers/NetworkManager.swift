@@ -12,18 +12,17 @@ final class NetworkManager {
     
     static let shared = NetworkManager()
     
+    var onStatusChange: ((Bool) -> Void)?
+    
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue.global(qos: .background)
-    
-    private var isConnected: Bool = false {
+    private var isConnected = false {
         didSet {
             DispatchQueue.main.async {
                 self.onStatusChange?(self.isConnected)
             }
         }
     }
-    
-    var onStatusChange: ((Bool) -> Void)?
     
     // MARK: - Livecycle
     

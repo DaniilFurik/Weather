@@ -58,7 +58,6 @@ extension WeatherViewModel {
     }
 }
     
-
 private extension WeatherViewModel {
     // MARK: - Private Methods
     
