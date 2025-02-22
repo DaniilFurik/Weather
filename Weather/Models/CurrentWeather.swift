@@ -12,15 +12,13 @@ struct CurrentWeather {
     let countryCode: String
     let temp: Double
     let tempFeelsLike: Double
-    let tempMin: Double
-    let tempMax: Double
     let pressure: Int
     let hum: Int
     let windSpeed: Double
     let windDeg: Int
-    let dateTime: Date
+    let dateTime: String
     let description: String
     let icon: String
-    let sunrise: Date
-    let sunset: Date
+    let sunrise: String
+    let sunset: String
 }

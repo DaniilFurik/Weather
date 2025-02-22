@@ -7,10 +7,8 @@
 
 import Foundation
 
-struct ForecastWeather {
+struct ForecastDayWeather {
     let temp: Double
-    let hum: Int
-    let dateTime: Date
-    let description: String
+    let dateTime: String
     let icon: String
 }
