@@ -110,7 +110,7 @@ private extension WeatherViewModel {
             var array = [ForecastWeekWeather]()
             
             let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"
+            formatter.dateFormat = GlobalConstants.sortFormat
             
             for i in 0...4 {
                 let date = Calendar.current.date(byAdding: .day, value: i, to: Date()) ?? Date()
@@ -126,7 +126,7 @@ private extension WeatherViewModel {
                         for: date,
                         format: GlobalConstants.dayOfWeekFormat
                     ),
-                    icon: dayForecast.first?.weather[.zero].icon ?? ""
+                    icon: dayForecast.last?.weather[.zero].icon ?? .empty
                 ))
             }
             

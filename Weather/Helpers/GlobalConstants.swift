@@ -23,11 +23,16 @@ final class GlobalConstants {
     static let timeFormat = "HH'h' mm'm' ss's'"
     static let hourFormat = "HH'h'"
     static let dayOfWeekFormat = "E, d"
+    static let sortFormat = "yyyy-MM-dd"
     
     static let degreesCelsius = "°C"
     
     static let verticalSpacing: CGFloat = 16
     static let horizontalSpacing: CGFloat = 16
+}
+
+extension String {
+    static let empty = String()
 }
 
 //https://openweathermap.org/current

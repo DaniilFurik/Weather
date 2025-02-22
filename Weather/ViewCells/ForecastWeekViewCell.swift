@@ -81,6 +81,7 @@ extension ForecastWeekViewCell {
         weatherImageView.snp.makeConstraints { make in
             make.left.equalTo(dateLabel.snp.right)
             make.top.bottom.equalToSuperview()
+            make.width.equalTo(Constants.size)
         }
         
         tempLabel.snp.makeConstraints { make in
