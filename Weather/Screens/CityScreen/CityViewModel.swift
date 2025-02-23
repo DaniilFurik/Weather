@@ -67,31 +67,22 @@ extension CityViewModel {
     
     func searchCities(name: String, completion: @escaping ([CityInfo]) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
-            guard let path = Bundle.main.path(forResource: "city.list", ofType: "json"),
-                  let data = try? Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe),
-                  let jsonArray = try? JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] else {
-                DispatchQueue.main.async {
-                    completion([])
-                }
-                return
-            }
-            
+            let jsonArray = self.getCitiesArray()
             var matchedCities = [CityInfo]()
             
             for cityDict in jsonArray {
-                guard let cityName = cityDict["name"] as? String,
-                      cityName.lowercased().contains(name.lowercased()) else {
-                    continue
-                }
-                
-                // Декодируем только найденные элементы
-                if let jsonData = try? JSONSerialization.data(withJSONObject: cityDict),
-                   let city = try? JSONDecoder().decode(CityInfo.self, from: jsonData) {
-                    matchedCities.append(city)
+                if let cityName = cityDict["name"] as? String,
+                   cityName.lowercased().contains(name.lowercased()) {
+                    
+                    // Декодируем только найденные элементы
+                    if let jsonData = try? JSONSerialization.data(withJSONObject: cityDict),
+                       let city = try? JSONDecoder().decode(CityInfo.self, from: jsonData) {
+                        if !self.cities.map({ $0.name }).contains(city.name) {
+                            matchedCities.append(city)
+                        }
+                    }
                 }
             }
-            
-            matchedCities = matchedCities.filter { !self.cities.map { $0.name }.contains($0.name) }
             
             DispatchQueue.main.async {
                 completion(matchedCities)
@@ -131,6 +122,16 @@ private extension CityViewModel {
     
     func getQueryParams(coord: CLLocationCoordinate2D) -> String {
         return "?\(GlobalConstants.unitsParam)&\(GlobalConstants.latitudeParam)\(coord.latitude)&\(GlobalConstants.longitudeeParam)\(coord.longitude)&\(GlobalConstants.appIDParam)"
+    }
+    
+    func getCitiesArray() -> [[String:Any]] {
+        guard let path = Bundle.main.path(forResource: "city.list", ofType: "json"),
+              let data = try? Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe),
+              let jsonArray = try? JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] else {
+            return [[:]]
+        }
+        
+        return jsonArray
     }
     
     func startDispatchGroup(coord: CLLocationCoordinate2D) {
