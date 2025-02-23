@@ -16,7 +16,12 @@ private enum Constants {
     
     static let backImage = UIImage(systemName: "chevron.left")
     
-    static let title = "Cities List"
+    static let title = "Weather in other cities"
+    static let cityPlaceholder = "Enter city name"
+    
+    static let cellIdentifier: String = "CityNameCell"
+    
+    static let minLetterCount = 3
 }
 
 class CityViewController: UIViewController {
@@ -43,9 +48,26 @@ class CityViewController: UIViewController {
         
         return collectionView
     }()
+    
+    private lazy var searchBar: UISearchBar = {
+        let searchBar = UISearchBar()
+        searchBar.placeholder = Constants.cityPlaceholder
+        searchBar.delegate = self
+        searchBar.backgroundImage = UIImage()
+        return searchBar
+    }()
+    
+    private lazy var tableView: UITableView = {
+        let tableView = UITableView()
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: Constants.cellIdentifier)
+        return tableView
+    }()
 
     private var cityViewModel: ICityViewModel = CityViewModel()
     private var cityArray = [CityListItem]()
+    private var searchResults = [CityInfo]()
     
     // MARK: - Lifecycle
     
@@ -94,11 +116,33 @@ private extension CityViewController {
             make.top.bottom.equalToSuperview()
         }
         
-        view.addSubview(citiesCollectionView)
+        let containerView = UIView()
+        view.addSubview(containerView)
+        
+        containerView.snp.makeConstraints { make in
+            make.left.right.bottom.equalToSuperview()
+            make.top.equalTo(headerView.snp.bottom)
+        }
+        
+        containerView.addSubview(searchBar)
+        
+        searchBar.snp.makeConstraints { make in
+            make.left.right.top.equalToSuperview()
+        }
+        
+        containerView.addSubview(citiesCollectionView)
         
         citiesCollectionView.snp.makeConstraints { make in
             make.left.right.bottom.equalToSuperview()
-            make.top.equalTo(headerView.snp.bottom)
+            make.top.equalTo(searchBar.snp.bottom)
+        }
+        
+        containerView.addSubview(tableView)
+        
+        tableView.snp.makeConstraints { make in
+            make.left.right.equalToSuperview()
+            make.top.equalTo(searchBar.snp.bottom)
+            make.height.equalTo(Int.zero)
         }
     }
     
@@ -110,6 +154,63 @@ private extension CityViewController {
         
         cityViewModel.showToast = { [weak self] message in
             self?.view.makeToast(message)
+        }
+    }
+}
+
+extension CityViewController: UISearchBarDelegate {
+    // MARK: - SearchBar Methods
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchText.isEmpty || searchText.count < Constants.minLetterCount {
+            searchResults = []
+            
+            tableView.snp.updateConstraints { make in
+                make.height.equalTo(Int.zero)
+            }
+        } else {
+            cityViewModel.searchCities(name: searchText, completion: { [weak self] cities in
+                self?.searchResults = cities
+                self?.tableView.reloadData()
+            })
+            
+            tableView.snp.updateConstraints { make in
+                make.height.equalTo(view.frame.height - searchBar.convert(CGPoint(x: searchBar.frame.maxX, y: searchBar.frame.maxY), to: nil).y)
+            }
+        }
+        
+        tableView.reloadData()
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        // Скрываем клавиатуру
+        searchBar.resignFirstResponder()
+    }
+}
+
+extension CityViewController: UITableViewDelegate, UITableViewDataSource {
+    // MARK: - TableView Methods
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return searchResults.count
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let city = searchResults[indexPath.row]
+        
+        let cell = tableView.dequeueReusableCell(withIdentifier: Constants.cellIdentifier, for: indexPath)
+        cell.textLabel?.text = "\(city.name), \(city.country)"
+        return cell
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        searchBar.resignFirstResponder()
+        searchBar.text = .empty
+        
+        cityViewModel.saveCity(city: searchResults[indexPath.row])
+        
+        tableView.snp.updateConstraints { make in
+            make.height.equalTo(Int.zero)
         }
     }
 }
@@ -133,6 +234,6 @@ extension CityViewController: UICollectionViewDelegateFlowLayout, UICollectionVi
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let width = view.frame.width - (collectionView.contentInset.left + collectionView.contentInset.right)
-        return CGSize(width: width, height: 64)
+        return CGSize(width: width, height: GlobalConstants.citySize)
     }
 }

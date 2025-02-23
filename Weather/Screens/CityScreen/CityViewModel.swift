@@ -18,6 +18,8 @@ private enum Constants {
 
 protocol ICityViewModel {
     func loadCitiesData()
+    func saveCity(city: CityInfo)
+    func searchCities(name: String, completion: @escaping ([CityInfo]) -> Void)
     
     var citiesData: (([CityListItem]) -> Void)? { get set }
     var showToast: ((String) -> Void)? { get set }
@@ -33,6 +35,9 @@ final class CityViewModel: ICityViewModel {
     
     private let service = WeatherService()
     private let locationManager = LocationManager()
+    private var cities = [CityListItem]()
+    private let queue = DispatchQueue(label: .empty, attributes: .concurrent)
+    private let dispatchGroup = DispatchGroup()
 }
  
 extension CityViewModel {
@@ -42,14 +47,52 @@ extension CityViewModel {
         if NetworkManager.shared.isConnected {
             locationManager.getCurrentLocation { [weak self] coordinate in
                 if let coordinate {
-                    // здесь очередь
-                    self?.getCitiesWeather(coord: coordinate)
+                    self?.startDispatchGroup(coord: coordinate)
                 } else {
                     self?.showToast?(GlobalConstants.coordinatesError)
                 }
             }
         } else {
             showToast?(GlobalConstants.connectionError)
+        }
+    }
+    
+    func saveCity(city: CityInfo) {
+        StorageManager.shared.saveCity(city: city)
+        
+        loadCitiesData()
+    }
+    
+    func searchCities(name: String, completion: @escaping ([CityInfo]) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard let path = Bundle.main.path(forResource: "city.list", ofType: "json"),
+                  let data = try? Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe),
+                  let jsonArray = try? JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] else {
+                DispatchQueue.main.async {
+                    completion([])
+                }
+                return
+            }
+            
+            let lowercasedName = name.lowercased()
+            var matchedCities = [CityInfo]()
+            
+            for cityDict in jsonArray {
+                guard let cityName = cityDict["name"] as? String,
+                      cityName.lowercased().contains(lowercasedName) else {
+                    continue
+                }
+                
+                // Декодируем только найденные элементы
+                if let jsonData = try? JSONSerialization.data(withJSONObject: cityDict),
+                   let city = try? JSONDecoder().decode(CityInfo.self, from: jsonData) {
+                    matchedCities.append(city)
+                }
+            }
+            
+            DispatchQueue.main.async {
+                completion(matchedCities)
+            }
         }
     }
 }
@@ -62,7 +105,8 @@ private extension CityViewModel {
         
         service.getCurrentWeather(queryParams: queryParams) { [weak self] result in
             if let weather = self?.getFormattedCityWeather(result) {
-                self?.citiesData?([weather])
+                self?.cities.append(weather)
+                self?.dispatchGroup.leave()
             } else {
                 self?.showToast?(GlobalConstants.unknownError)
             }
@@ -73,6 +117,7 @@ private extension CityViewModel {
         if let weather {
             return CityListItem(
                 name: weather.name,
+                country: weather.sys.country,
                 temp: weather.main.temp,
                 icon: weather.weather[.zero].icon
             )
@@ -84,5 +129,24 @@ private extension CityViewModel {
     func getQueryParams(coord: CLLocationCoordinate2D) -> String {
         return "?\(GlobalConstants.unitsParam)&\(GlobalConstants.latitudeParam)\(coord.latitude)&\(GlobalConstants.longitudeeParam)\(coord.longitude)&\(GlobalConstants.appIDParam)"
     }
+    
+    func startDispatchGroup(coord: CLLocationCoordinate2D) {
+        cities = []
+        
+        let array = StorageManager.shared.getCities()
+        
+        for item in array {
+            let coord = CLLocationCoordinate2D(latitude: item.coord.lat, longitude: item.coord.lon)
+            self.dispatchGroup.enter()
+            self.queue.async {
+                self.getCitiesWeather(coord: coord)
+            }
+        }
+        
+        dispatchGroup.notify(queue: .main) { [weak self] in
+            if let cities = self?.cities {
+                self?.citiesData?(cities)
+            }
+        }
+    }
 }
-

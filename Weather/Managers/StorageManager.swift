@@ -18,26 +18,26 @@ final class StorageManager {
 extension StorageManager {
     // MARK: - Methods
     
-    func saveCity(city: String) {
+    func saveCity(city: CityInfo) {
         var array = getCities()
         array.append(city)
         
         UserDefaults.standard.set(encodable: array, forKey: .keyCities)
     }
     
-    func getCities() -> [String] {
-        guard let list = UserDefaults.standard.get([String].self, forKey: .keyCities) else { return [] }
+    func getCities() -> [CityInfo] {
+        guard let list = UserDefaults.standard.get([CityInfo].self, forKey: .keyCities) else { return [] }
         
         return list
     }
     
-    func getCurrentCity() -> String? {
-        guard let city = UserDefaults.standard.get(String.self, forKey: .keyCurrentCity) else { return nil }
+    func getCurrentCity() -> CityInfo? {
+        guard let city = UserDefaults.standard.get(CityInfo.self, forKey: .keyCurrentCity) else { return nil }
         
         return city
     }
     
-    func saveCurrentCity(city: String) {
+    func saveCurrentCity(city: CityInfo) {
         UserDefaults.standard.set(encodable: city, forKey: .keyCurrentCity)
     }
 }

@@ -7,12 +7,6 @@
 
 import UIKit
 
-// MARK: - Properties
-
-private enum Constants {
-    static let size: CGFloat = 64
-}
-
 class CityViewCell: UICollectionViewCell {
     // MARK: - Properties
     
@@ -78,7 +72,7 @@ extension CityViewCell {
         weatherImageView.snp.makeConstraints { make in
             make.right.equalToSuperview().inset(GlobalConstants.horizontalSpacing)
             make.top.bottom.equalToSuperview()
-            make.width.equalTo(Constants.size)
+            make.width.equalTo(GlobalConstants.citySize)
         }
         
         tempLabel.snp.makeConstraints { make in
@@ -89,7 +83,7 @@ extension CityViewCell {
     }
     
     func configure(with model: CityListItem) {
-        cityNameLabel.text = model.name
+        cityNameLabel.text = "\(model.name), \(model.country)"
         tempLabel.text = "\(model.temp)\(GlobalConstants.degreesCelsius)"
         weatherImageView.kf.setImage(with: URL(string: "\(GlobalConstants.imgURL)\(model.icon)\(GlobalConstants.imgPostfix)"))
     }

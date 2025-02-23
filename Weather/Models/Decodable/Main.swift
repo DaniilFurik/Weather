@@ -10,7 +10,7 @@ final class Main: Decodable {
     let feelsLike: Double
     let tempMin: Double
     let tempMax: Double
-    let pressure: Int
+    let pressure: Double
     let humidity: Int
     let seaLevel: Int
     let grndLevel: Int

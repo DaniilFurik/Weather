@@ -29,6 +29,7 @@ final class GlobalConstants {
     
     static let verticalSpacing: CGFloat = 16
     static let horizontalSpacing: CGFloat = 16
+    static let citySize: CGFloat = 64
     
     static let latitudeParam = "lat="
     static let longitudeeParam = "lon="

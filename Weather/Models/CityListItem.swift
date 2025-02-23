@@ -9,6 +9,7 @@ import Foundation
 
 struct CityListItem {
     let name: String
+    let country: String
     let temp: Double
     let icon: String
 }

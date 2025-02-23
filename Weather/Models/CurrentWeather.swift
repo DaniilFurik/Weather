@@ -12,7 +12,7 @@ struct CurrentWeather {
     let countryCode: String
     let temp: Double
     let tempFeelsLike: Double
-    let pressure: Int
+    let pressure: Double
     let hum: Int
     let windSpeed: Double
     let windDeg: Int

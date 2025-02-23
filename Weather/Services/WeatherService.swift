@@ -47,6 +47,21 @@ final class WeatherService: IWeatherService {
             }
         }.resume()
     }
+    
+    private func handleDecodingError(_ error: Error) {
+        switch error {
+        case let DecodingError.dataCorrupted(context):
+            print("Data corrupted: \(context)")
+        case let DecodingError.keyNotFound(key, context):
+            print("Key '\(key)' not found: \(context)")
+        case let DecodingError.typeMismatch(type, context):
+            print("Type mismatch: \(type), \(context)")
+        case let DecodingError.valueNotFound(value, context):
+            print("Value '\(value)' not found: \(context)")
+        default:
+            print("Parse error: \(error)")
+        }
+    }
 }
 
 extension WeatherService {
@@ -55,9 +70,13 @@ extension WeatherService {
     func getCurrentWeather(queryParams: String, completion: @escaping (WeatherResponse?) -> Void) {
         sendRequest(components: .current, queryParams: queryParams) { data in
             guard let data else { return }
-
-            let currentWeather = try? JSONDecoder().decode(WeatherResponse.self, from: data)
-            completion(currentWeather)
+            
+            do {
+                let currentWeather = try JSONDecoder().decode(WeatherResponse.self, from: data)
+                completion(currentWeather)
+            } catch {
+                self.handleDecodingError(error)
+            }
         }
     }
     
@@ -65,8 +84,12 @@ extension WeatherService {
         sendRequest(components: .forecast, queryParams: queryParams) { data in
             guard let data else { return }
 
-            let forecast = try? JSONDecoder().decode(ForecastResponse.self, from: data)
-            completion(forecast)
+            do {
+                let forecast = try JSONDecoder().decode(ForecastResponse.self, from: data)
+                completion(forecast)
+            } catch {
+                self.handleDecodingError(error)
+            }
         }
     }
 }

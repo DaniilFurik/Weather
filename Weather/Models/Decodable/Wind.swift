@@ -8,5 +8,5 @@
 final class Wind: Decodable {
     let speed: Double
     let deg: Int
-    let gust: Double
+    let gust: Double?
 }
