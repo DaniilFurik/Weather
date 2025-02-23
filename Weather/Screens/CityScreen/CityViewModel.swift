@@ -40,7 +40,6 @@ final class CityViewModel: ICityViewModel {
     private let dispatchGroup = DispatchGroup()
     
     private var cities = [CityListItem]()
-    private var existingCities = [String]()
 }
  
 extension CityViewModel {
@@ -92,7 +91,7 @@ extension CityViewModel {
                 }
             }
             
-            matchedCities = matchedCities.filter { !self.existingCities.contains($0.name) }
+            matchedCities = matchedCities.filter { !self.cities.map { $0.name }.contains($0.name) }
             
             DispatchQueue.main.async {
                 completion(matchedCities)
@@ -149,7 +148,6 @@ private extension CityViewModel {
         
         dispatchGroup.notify(queue: .main) { [weak self] in
             if let cities = self?.cities {
-                self?.existingCities = cities.map { $0.name }
                 self?.citiesData?(cities)
             }
         }
