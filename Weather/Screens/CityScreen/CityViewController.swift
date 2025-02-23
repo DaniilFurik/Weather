@@ -20,8 +20,6 @@ private enum Constants {
     static let cityPlaceholder = "Enter city name"
     
     static let cellIdentifier: String = "CityNameCell"
-    
-    static let minLetterCount = 3
 }
 
 class CityViewController: UIViewController {
@@ -162,7 +160,7 @@ extension CityViewController: UISearchBarDelegate {
     // MARK: - SearchBar Methods
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        if searchText.isEmpty || searchText.count < Constants.minLetterCount {
+        if searchText.isEmpty {
             searchResults = []
             
             tableView.snp.updateConstraints { make in

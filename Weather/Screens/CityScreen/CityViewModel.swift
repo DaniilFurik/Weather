@@ -35,9 +35,12 @@ final class CityViewModel: ICityViewModel {
     
     private let service = WeatherService()
     private let locationManager = LocationManager()
-    private var cities = [CityListItem]()
+    
     private let queue = DispatchQueue(label: .empty, attributes: .concurrent)
     private let dispatchGroup = DispatchGroup()
+    
+    private var cities = [CityListItem]()
+    private var existingCities = [String]()
 }
  
 extension CityViewModel {
@@ -74,12 +77,11 @@ extension CityViewModel {
                 return
             }
             
-            let lowercasedName = name.lowercased()
             var matchedCities = [CityInfo]()
             
             for cityDict in jsonArray {
                 guard let cityName = cityDict["name"] as? String,
-                      cityName.lowercased().contains(lowercasedName) else {
+                      cityName.lowercased().contains(name.lowercased()) else {
                     continue
                 }
                 
@@ -89,6 +91,8 @@ extension CityViewModel {
                     matchedCities.append(city)
                 }
             }
+            
+            matchedCities = matchedCities.filter { !self.existingCities.contains($0.name) }
             
             DispatchQueue.main.async {
                 completion(matchedCities)
@@ -145,6 +149,7 @@ private extension CityViewModel {
         
         dispatchGroup.notify(queue: .main) { [weak self] in
             if let cities = self?.cities {
+                self?.existingCities = cities.map { $0.name }
                 self?.citiesData?(cities)
             }
         }
