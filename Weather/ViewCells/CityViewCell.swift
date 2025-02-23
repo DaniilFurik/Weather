@@ -13,7 +13,7 @@ private enum Constants {
     static let size: CGFloat = 64
 }
 
-class CityViewCell: UITableViewCell {
+class CityViewCell: UICollectionViewCell {
     // MARK: - Properties
     
     static var identifier: String { "\(Self.self)" }
@@ -38,11 +38,12 @@ class CityViewCell: UITableViewCell {
     
     // MARK: - Livecycle
     
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        
         configureUI()
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -60,6 +61,9 @@ extension CityViewCell {
     // MARK: - Methods
     
     private func configureUI() {
+        contentView.backgroundColor = .separator
+        contentView.roundConrers()
+        
         contentView.addSubview(cityNameLabel)
         contentView.addSubview(weatherImageView)
         contentView.addSubview(tempLabel)

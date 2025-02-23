@@ -22,16 +22,26 @@ private enum Constants {
 class CityViewController: UIViewController {
     // MARK: - Properties
     
-    private lazy var citiesTableView: UITableView = {
-        let tableView = UITableView(frame: .zero, style: .insetGrouped)
-        tableView.delegate = self
-        tableView.dataSource = self
-        tableView.estimatedRowHeight = .leastNonzeroMagnitude
-        tableView.rowHeight = UITableView.automaticDimension
-        tableView.register(CityViewCell.self, forCellReuseIdentifier: CityViewCell.identifier)
-        tableView.backgroundColor = .clear
-        tableView.isScrollEnabled = false
-        return tableView
+    private lazy var citiesCollectionView: UICollectionView = {
+        let flowLayout = UICollectionViewFlowLayout()
+        flowLayout.scrollDirection = .vertical
+        
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.alwaysBounceVertical = true
+
+        collectionView.register(CityViewCell.self, forCellWithReuseIdentifier: CityViewCell.identifier)
+        collectionView.backgroundColor = .clear
+        
+        collectionView.contentInset = .init(
+            top: GlobalConstants.verticalSpacing,
+            left: GlobalConstants.horizontalSpacing,
+            bottom: .zero,
+            right: GlobalConstants.horizontalSpacing
+        )
+        
+        return collectionView
     }()
 
     private var cityViewModel: ICityViewModel = CityViewModel()
@@ -84,9 +94,9 @@ private extension CityViewController {
             make.top.bottom.equalToSuperview()
         }
         
-        view.addSubview(citiesTableView)
+        view.addSubview(citiesCollectionView)
         
-        citiesTableView.snp.makeConstraints { make in
+        citiesCollectionView.snp.makeConstraints { make in
             make.left.right.bottom.equalToSuperview()
             make.top.equalTo(headerView.snp.bottom)
         }
@@ -95,7 +105,7 @@ private extension CityViewController {
     func bindViewModel() {
         cityViewModel.citiesData = { [weak self] cities in
             self?.cityArray = cities
-            self?.citiesTableView.reloadData()
+            self?.citiesCollectionView.reloadData()
         }
         
         cityViewModel.showToast = { [weak self] message in
@@ -104,17 +114,25 @@ private extension CityViewController {
     }
 }
 
-extension CityViewController: UITableViewDelegate, UITableViewDataSource {
-    // MARK: - TableView Methods
+extension CityViewController: UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource {
+    // MARK: - CollectionView Methods
     
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return cityArray.count
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: CityViewCell.identifier, for: indexPath) as? CityViewCell else { return UITableViewCell()}
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CityViewCell.identifier, for: indexPath) as? CityViewCell else {
+            return UICollectionViewCell()
+        }
         
         cell.configure(with: cityArray[indexPath.row])
+        
         return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let width = view.frame.width - (collectionView.contentInset.left + collectionView.contentInset.right)
+        return CGSize(width: width, height: 64)
     }
 }
