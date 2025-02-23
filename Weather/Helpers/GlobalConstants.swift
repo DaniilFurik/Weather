@@ -29,10 +29,18 @@ final class GlobalConstants {
     
     static let verticalSpacing: CGFloat = 16
     static let horizontalSpacing: CGFloat = 16
+    
+    static let latitudeParam = "lat="
+    static let longitudeeParam = "lon="
+    static let unitsParam = "units=metric"
+    static let appIDParam = "appid=\(appID)"
 }
 
 extension String {
     static let empty = String()
+    
+    static let keyCities = "keyCities"
+    static let keyCurrentCity = "keyCurrentCity"
 }
 
 //https://openweathermap.org/current

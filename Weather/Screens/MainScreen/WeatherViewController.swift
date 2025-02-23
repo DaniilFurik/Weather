@@ -15,9 +15,11 @@ import UIKit
 private enum Constants {
     static let imageSize: CGFloat = 100
     static let forecastSize: CGFloat = 125
+    static let buttonSize: CGFloat = 24
     
     static let compassImage = UIImage(named: "Compass")
     static let arrowImage = UIImage(named: "Arrow")
+    static let listImage = UIImage(systemName: "line.horizontal.3")
     
     static let forecastDayText = "Forecast for the next 24 hours:"
     static let forecastWeekText = "Forecast for the 5 days:"
@@ -185,13 +187,25 @@ private extension WeatherViewController {
         contentView.addSubview(cityView)
 
         cityView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(GlobalConstants.verticalSpacing)
+            make.top.equalToSuperview()
             make.left.equalToSuperview().offset(GlobalConstants.horizontalSpacing)
             make.right.equalToSuperview().inset(GlobalConstants.horizontalSpacing)
         }
         
         cityInfoLabel.snp.makeConstraints { make in
             make.centerX.top.bottom.equalToSuperview()
+        }
+        
+        let citiesButton = UIButton(type: .system)
+        citiesButton.setImage(Constants.listImage, for: .normal)
+        citiesButton.addAction(UIAction(handler: { _ in
+            self.navigationController?.pushViewController(CityViewController(), animated: true)
+        }), for: .touchUpInside)
+        cityView.addSubview(citiesButton)
+        
+        citiesButton.snp.makeConstraints { make in
+            make.right.equalToSuperview()
+            make.top.bottom.equalToSuperview()
         }
         
         let tempView = WeatherInfoView()

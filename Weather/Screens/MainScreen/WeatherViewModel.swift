@@ -11,11 +11,7 @@ import CoreLocation
 // MARK: - Constants
 
 private enum Constants {
-    static let latitudeParam = "lat="
-    static let longitudeeParam = "lon="
-    static let unitsParam = "units=metric"
     static let countParam = "cnt=8"
-    static let appIDParam = "appid=\(GlobalConstants.appID)"
 }
 
 // MARK: - Protocol
@@ -47,20 +43,18 @@ extension WeatherViewModel {
     // MARK: - Methods
     
     func loadWeatherData() {
-        NetworkManager.shared.onStatusChange = { [weak self] isConnected in
-            if isConnected {
-                self?.locationManager.getCurrentLocation { [weak self] coordinate in
-                    if let coordinate {
-                        self?.getCurrentWeather(coord: coordinate)
-                        self?.getForecastDayWeather(coord: coordinate)
-                        self?.getForecastWeekWeather(coord: coordinate)
-                    } else {
-                        self?.showToast?(GlobalConstants.coordinatesError)
-                    }
+        if NetworkManager.shared.isConnected {
+            locationManager.getCurrentLocation { [weak self] coordinate in
+                if let coordinate {
+                    self?.getCurrentWeather(coord: coordinate)
+                    self?.getForecastDayWeather(coord: coordinate)
+                    self?.getForecastWeekWeather(coord: coordinate)
+                } else {
+                    self?.showToast?(GlobalConstants.coordinatesError)
                 }
-            } else {
-                self?.showToast?(GlobalConstants.connectionError)
             }
+        } else {
+            showToast?(GlobalConstants.connectionError)
         }
     }
 }
@@ -189,6 +183,6 @@ private extension WeatherViewModel {
     }
     
     func getQueryParams(coord: CLLocationCoordinate2D) -> String {
-        return "?\(Constants.unitsParam)&\(Constants.latitudeParam)\(coord.latitude)&\(Constants.longitudeeParam)\(coord.longitude)&\(Constants.appIDParam)"
+        return "?\(GlobalConstants.unitsParam)&\(GlobalConstants.latitudeParam)\(coord.latitude)&\(GlobalConstants.longitudeeParam)\(coord.longitude)&\(GlobalConstants.appIDParam)"
     }
 }
