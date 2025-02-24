@@ -235,4 +235,9 @@ extension CityViewController: UICollectionViewDelegateFlowLayout, UICollectionVi
         let width = view.frame.width - (collectionView.contentInset.left + collectionView.contentInset.right)
         return CGSize(width: width, height: GlobalConstants.citySize)
     }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        cityViewModel.saveCurrentCity(cityId: cityArray[indexPath.row].id)
+        navigationController?.popViewController(animated: true)
+    }
 }

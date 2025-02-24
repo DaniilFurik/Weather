@@ -37,7 +37,7 @@ extension StorageManager {
         return city
     }
     
-    func saveCurrentCity(city: CityInfo) {
+    func saveCurrentCity(city: CityInfo?) {
         UserDefaults.standard.set(encodable: city, forKey: .keyCurrentCity)
     }
 }

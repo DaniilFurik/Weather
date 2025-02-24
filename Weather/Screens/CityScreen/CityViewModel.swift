@@ -8,16 +8,11 @@
 import Foundation
 import CoreLocation
 
-// MARK: - Constants
-
-private enum Constants {
-
-}
-
 // MARK: - Protocol
 
 protocol ICityViewModel {
     func loadCitiesData()
+    func saveCurrentCity(cityId: Int)
     func saveCity(city: CityInfo)
     func searchCities(name: String, completion: @escaping ([CityInfo]) -> Void)
     
@@ -40,6 +35,7 @@ final class CityViewModel: ICityViewModel {
     private let dispatchGroup = DispatchGroup()
     
     private var cities = [CityListItem]()
+    private var citiesInfo = [CityInfo]()
 }
  
 extension CityViewModel {
@@ -55,8 +51,12 @@ extension CityViewModel {
     
     func saveCity(city: CityInfo) {
         StorageManager.shared.saveCity(city: city)
-        
         loadCitiesData()
+    }
+    
+    func saveCurrentCity(cityId: Int) {
+        let currentCity = citiesInfo.first { $0.id == cityId}
+        StorageManager.shared.saveCurrentCity(city: currentCity)
     }
     
     func searchCities(name: String, completion: @escaping ([CityInfo]) -> Void) {
@@ -71,7 +71,7 @@ extension CityViewModel {
                     // Декодируем только найденные элементы
                     if let jsonData = try? JSONSerialization.data(withJSONObject: cityDict),
                        let city = try? JSONDecoder().decode(CityInfo.self, from: jsonData) {
-                        if !self.cities.map({ $0.id }).contains(city.id) { // если нет еще такого id 
+                        if !self.cities.map({ $0.id }).contains(city.id) { // если нет еще такого id
                             matchedCities.append(city)
                         }
                     }
@@ -94,10 +94,11 @@ private extension CityViewModel {
         service.getCurrentWeather(queryParams: queryParams) { [weak self] result in
             if let weather = self?.getFormattedCityWeather(result) {
                 self?.cities.append(weather)
-                self?.dispatchGroup.leave()
             } else {
                 self?.showToast?(GlobalConstants.unknownError)
             }
+            
+            self?.dispatchGroup.leave()
         }
     }
     
@@ -131,10 +132,9 @@ private extension CityViewModel {
     
     func startDispatchGroup() {
         cities = []
+        citiesInfo = StorageManager.shared.getCities()
         
-        let array = StorageManager.shared.getCities()
-        
-        for item in array {
+        for item in citiesInfo {
             self.dispatchGroup.enter()
             self.queue.async {
                 self.getCitiesWeather(cityId: item.id)
@@ -142,7 +142,8 @@ private extension CityViewModel {
         }
         
         dispatchGroup.notify(queue: .main) { [weak self] in
-            if let cities = self?.cities {
+            if var cities = self?.cities {
+                cities.sort { $0.name < $1.name }
                 self?.citiesData?(cities)
             }
         }

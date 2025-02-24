@@ -21,4 +21,5 @@ struct CurrentWeather {
     let icon: String
     let sunrise: String
     let sunset: String
+    let isCurrentCity: Bool
 }

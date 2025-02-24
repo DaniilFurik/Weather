@@ -27,7 +27,7 @@ final class GlobalConstants {
     
     static let degreesCelsius = "°C"
     
-    static let headerSize: CGFloat = 36
+    static let headerSize: CGFloat = 50
     static let verticalSpacing: CGFloat = 16
     static let horizontalSpacing: CGFloat = 16
     static let citySize: CGFloat = 64

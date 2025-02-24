@@ -20,6 +20,8 @@ private enum Constants {
     static let compassImage = UIImage(named: "Compass")
     static let arrowImage = UIImage(named: "Arrow")
     static let listImage = UIImage(systemName: "line.horizontal.3")
+    static let locationImage =  UIImage(systemName: "location")
+    static let locationFillImage = UIImage(systemName: "location.fill")
     
     static let forecastDayText = "Forecast for the next 24 hours:"
     static let forecastWeekText = "Forecast for the 5 days:"
@@ -105,6 +107,12 @@ class WeatherViewController: UIViewController {
         return label
     }()
     
+    private let locationButton: HeaderButton = {
+        let button = HeaderButton(image: Constants.locationFillImage)
+        button.isHidden = true
+        return button
+    }()
+    
     private lazy var forecastDayCollectionView: UICollectionView = {
         let flowLayout = UICollectionViewFlowLayout()
         flowLayout.scrollDirection = .horizontal
@@ -165,12 +173,52 @@ private extension WeatherViewController {
     func configureUI() {
         view.backgroundColor = .systemBackground
 
+        let cityView = UIView()
+        cityView.addSubview(cityInfoLabel)
+        view.addSubview(cityView)
+
+        cityView.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
+            make.left.equalToSuperview().offset(GlobalConstants.horizontalSpacing)
+            make.right.equalToSuperview().inset(GlobalConstants.horizontalSpacing)
+            make.height.equalTo(GlobalConstants.headerSize)
+        }
+        
+        let citiesButton = HeaderButton(image: Constants.listImage)
+        citiesButton.addAction(UIAction(handler: { _ in
+            self.navigationController?.pushViewController(CityViewController(), animated: true)
+        }), for: .touchUpInside)
+        cityView.addSubview(citiesButton)
+        
+        citiesButton.snp.makeConstraints { make in
+            make.right.equalToSuperview()
+            make.top.equalToSuperview()
+            make.width.equalTo(citiesButton.snp.height)
+            make.bottom.equalToSuperview().inset(GlobalConstants.verticalSpacing)
+        }
+        
+        locationButton.addAction(UIAction(handler: { _ in
+            self.weatherViewModel.loadCurrentLocation()
+        }), for: .touchUpInside)
+        cityView.addSubview(locationButton)
+        
+        locationButton.snp.makeConstraints { make in
+            make.left.equalToSuperview()
+            make.top.bottom.equalTo(citiesButton)
+            make.width.height.equalTo(citiesButton.snp.width)
+        }
+        
+        cityInfoLabel.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.centerY.equalTo(citiesButton)
+        }
+        
         let scrollView = UIScrollView()
         scrollView.alwaysBounceVertical = true
         view.addSubview(scrollView)
         
         scrollView.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
+            make.top.equalTo(cityView.snp.bottom)
             make.left.right.bottom.equalToSuperview()
         }
         
@@ -181,35 +229,7 @@ private extension WeatherViewController {
             make.edges.width.equalToSuperview()
             make.height.equalToSuperview().priority(.low)
         }
-        
-        let cityView = UIView()
-        cityView.addSubview(cityInfoLabel)
-        contentView.addSubview(cityView)
-
-        cityView.snp.makeConstraints { make in
-            make.top.equalToSuperview()
-            make.left.equalToSuperview().offset(GlobalConstants.horizontalSpacing)
-            make.right.equalToSuperview().inset(GlobalConstants.horizontalSpacing)
-            make.height.equalTo(GlobalConstants.headerSize)
-        }
-        
-        cityInfoLabel.snp.makeConstraints { make in
-            make.centerX.top.bottom.equalToSuperview()
-        }
-        
-        let citiesButton = UIButton(type: .system)
-        citiesButton.setImage(Constants.listImage, for: .normal)
-        citiesButton.addAction(UIAction(handler: { _ in
-            self.navigationController?.pushViewController(CityViewController(), animated: true)
-        }), for: .touchUpInside)
-        cityView.addSubview(citiesButton)
-        
-        citiesButton.snp.makeConstraints { make in
-            make.right.equalToSuperview()
-            make.top.bottom.equalToSuperview()
-            make.width.equalTo(citiesButton.snp.height)
-        }
-        
+            
         let tempView = WeatherInfoView()
         tempView.addSubview(tempLabel)
         tempView.addSubview(tempImage)
@@ -219,7 +239,7 @@ private extension WeatherViewController {
         
         tempView.snp.makeConstraints { make in
             make.left.right.equalTo(cityView)
-            make.top.equalTo(cityView.snp.bottom).offset(GlobalConstants.verticalSpacing)
+            make.top.equalToSuperview()
         }
 
         tempImage.snp.makeConstraints { make in
@@ -392,6 +412,17 @@ private extension WeatherViewController {
             self?.sunriseLabel.text = "\(Constants.sunriseText) \(weather.sunrise)"
             self?.sunsetLabel.text = "\(Constants.sunriseText) \(weather.sunset)"
             self?.dateLabel.text = "\(Constants.serviceNameText)\n\(weather.dateTime.description)"
+            
+            self?.locationButton.isHidden = false
+            if weather.isCurrentCity {
+                self?.locationButton.tintColor = .orange
+                self?.locationButton.isUserInteractionEnabled = false
+                self?.locationButton.setImage(Constants.locationFillImage, for: .normal)
+            } else {
+                self?.locationButton.tintColor = .accent
+                self?.locationButton.isUserInteractionEnabled = true
+                self?.locationButton.setImage(Constants.locationImage, for: .normal)
+            }
         }
         
         weatherViewModel.forecastDayWeather = { [weak self] forecastDayArray in

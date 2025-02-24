@@ -18,6 +18,7 @@ private enum Constants {
 
 protocol IWeatherViewModel {
     func loadWeatherData()
+    func loadCurrentLocation()
     
     var currentWeather: ((CurrentWeather) -> Void)? { get set }
     var forecastDayWeather: (([ForecastDayWeather]) -> Void)? { get set }
@@ -39,6 +40,7 @@ final class WeatherViewModel: IWeatherViewModel {
     
     private let service = WeatherService()
     private let locationManager = LocationManager()
+    private var isCurrentCity = true
 }
  
 extension WeatherViewModel {
@@ -46,16 +48,19 @@ extension WeatherViewModel {
     
     func loadWeatherData() {
         if NetworkManager.shared.isConnected {
-            locationManager.getCurrentLocation { [weak self] coordinate, permissionError in
-                if let coordinate {
-                    self?.getCurrentWeather(coord: coordinate)
-                    self?.getForecastDayWeather(coord: coordinate)
-                    self?.getForecastWeekWeather(coord: coordinate)
-                } else {
-                    if permissionError {
-                        self?.showAlert?()
+            if let cityInfo = StorageManager.shared.getCurrentCity() {
+                loadAllWeather(coordinate: CLLocationCoordinate2D(latitude: cityInfo.coord.lat, longitude: cityInfo.coord.lon))
+                isCurrentCity = false
+            } else {
+                locationManager.getCurrentLocation { [weak self] coordinate, permissionError in
+                    if let coordinate {
+                        self?.loadAllWeather(coordinate: coordinate)
                     } else {
-                        self?.showToast?(GlobalConstants.coordinatesError)
+                        if permissionError {
+                            self?.showAlert?()
+                        } else {
+                            self?.showToast?(GlobalConstants.coordinatesError)
+                        }
                     }
                 }
             }
@@ -63,10 +68,22 @@ extension WeatherViewModel {
             showToast?(GlobalConstants.connectionError)
         }
     }
+    
+    func loadCurrentLocation() {
+        isCurrentCity = true
+        StorageManager.shared.saveCurrentCity(city: nil)
+        loadWeatherData()
+    }
 }
     
 private extension WeatherViewModel {
     // MARK: - Private Methods
+    
+    func loadAllWeather(coordinate: CLLocationCoordinate2D) {
+        getCurrentWeather(coord: coordinate)
+        getForecastDayWeather(coord: coordinate)
+        getForecastWeekWeather(coord: coordinate)
+    }
     
     func getCurrentWeather(coord: CLLocationCoordinate2D) {
         let queryParams = getQueryParams(coord: coord)
@@ -181,7 +198,8 @@ private extension WeatherViewModel {
                 sunset: Manager.shared.getFormattedDate(
                     for: Date(timeIntervalSince1970: TimeInterval(weather.sys.sunset)),
                     format: GlobalConstants.timeFormat
-                )
+                ),
+                isCurrentCity: isCurrentCity
             )
         }
         
