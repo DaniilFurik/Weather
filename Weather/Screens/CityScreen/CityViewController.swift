@@ -90,6 +90,7 @@ private extension CityViewController {
         headerView.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
             make.left.right.equalToSuperview()
+            make.height.equalTo(GlobalConstants.headerSize)
         }
         
         let titleLabel = UILabel()

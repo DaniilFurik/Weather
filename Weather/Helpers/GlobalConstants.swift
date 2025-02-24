@@ -27,6 +27,7 @@ final class GlobalConstants {
     
     static let degreesCelsius = "°C"
     
+    static let headerSize: CGFloat = 36
     static let verticalSpacing: CGFloat = 16
     static let horizontalSpacing: CGFloat = 16
     static let citySize: CGFloat = 64
@@ -35,6 +36,7 @@ final class GlobalConstants {
     static let longitudeeParam = "lon="
     static let unitsParam = "units=metric"
     static let appIDParam = "appid=\(appID)"
+    static let cityIDParam = "id="
 }
 
 extension String {

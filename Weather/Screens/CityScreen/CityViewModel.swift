@@ -47,13 +47,7 @@ extension CityViewModel {
     
     func loadCitiesData() {
         if NetworkManager.shared.isConnected {
-            locationManager.getCurrentLocation { [weak self] coordinate in
-                if let coordinate {
-                    self?.startDispatchGroup(coord: coordinate)
-                } else {
-                    self?.showToast?(GlobalConstants.coordinatesError)
-                }
-            }
+            startDispatchGroup()
         } else {
             showToast?(GlobalConstants.connectionError)
         }
@@ -77,7 +71,7 @@ extension CityViewModel {
                     // Декодируем только найденные элементы
                     if let jsonData = try? JSONSerialization.data(withJSONObject: cityDict),
                        let city = try? JSONDecoder().decode(CityInfo.self, from: jsonData) {
-                        if !self.cities.map({ $0.name }).contains(city.name) {
+                        if !self.cities.map({ $0.id }).contains(city.id) { // если нет еще такого id 
                             matchedCities.append(city)
                         }
                     }
@@ -94,8 +88,8 @@ extension CityViewModel {
 private extension CityViewModel {
     // MARK: - Private Methods
     
-    func getCitiesWeather(coord: CLLocationCoordinate2D) {
-        let queryParams = getQueryParams(coord: coord)
+    func getCitiesWeather(cityId: Int) {
+        let queryParams = getQueryParams(cityId: cityId)
         
         service.getCurrentWeather(queryParams: queryParams) { [weak self] result in
             if let weather = self?.getFormattedCityWeather(result) {
@@ -113,15 +107,16 @@ private extension CityViewModel {
                 name: weather.name,
                 country: weather.sys.country,
                 temp: weather.main.temp,
-                icon: weather.weather[.zero].icon
+                icon: weather.weather[.zero].icon,
+                id: weather.id
             )
         }
         
         return nil
     }
     
-    func getQueryParams(coord: CLLocationCoordinate2D) -> String {
-        return "?\(GlobalConstants.unitsParam)&\(GlobalConstants.latitudeParam)\(coord.latitude)&\(GlobalConstants.longitudeeParam)\(coord.longitude)&\(GlobalConstants.appIDParam)"
+    func getQueryParams(cityId: Int) -> String {
+        return "?\(GlobalConstants.unitsParam)&\(GlobalConstants.cityIDParam)\(cityId)&\(GlobalConstants.appIDParam)"
     }
     
     func getCitiesArray() -> [[String:Any]] {
@@ -134,16 +129,15 @@ private extension CityViewModel {
         return jsonArray
     }
     
-    func startDispatchGroup(coord: CLLocationCoordinate2D) {
+    func startDispatchGroup() {
         cities = []
         
         let array = StorageManager.shared.getCities()
         
         for item in array {
-            let coord = CLLocationCoordinate2D(latitude: item.coord.lat, longitude: item.coord.lon)
             self.dispatchGroup.enter()
             self.queue.async {
-                self.getCitiesWeather(coord: coord)
+                self.getCitiesWeather(cityId: item.id)
             }
         }
         

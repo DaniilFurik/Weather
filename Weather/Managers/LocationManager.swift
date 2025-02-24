@@ -11,7 +11,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     // MARK: - Properties
     
     private let locationManager = CLLocationManager()
-    private var completion: ((CLLocationCoordinate2D?) -> Void)?
+    private var completion: ((CLLocationCoordinate2D?, Bool) -> Void)?
     
     // MARK: - Lifecycle
     
@@ -23,7 +23,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         if let location = locations.last {
-            completion?(location.coordinate)
+            completion?(location.coordinate, false)
             locationManager.stopUpdatingLocation() // Останавливаем обновления после получения данных
             completion = nil // Обнуляем, чтобы избежать утечек памяти
         }
@@ -35,7 +35,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("\(GlobalConstants.connectionError): \(error.localizedDescription)")
-        completion?(nil)
+        completion?(nil, false)
         completion = nil
     }
 }
@@ -43,7 +43,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
 extension LocationManager {
     // MARK: - Methods
     
-    func getCurrentLocation(completion: @escaping (CLLocationCoordinate2D?) -> Void) {
+    func getCurrentLocation(completion: @escaping (CLLocationCoordinate2D?, Bool) -> Void) {
         self.completion = completion
         checkAuthorization()
     }
@@ -56,7 +56,7 @@ extension LocationManager {
             locationManager.startUpdatingLocation() // Начинаем получать координаты
         case .denied, .restricted:
             print(GlobalConstants.noLocationAccess)
-            completion?(nil)
+            completion?(nil, true)
             completion = nil
         @unknown default:
             break

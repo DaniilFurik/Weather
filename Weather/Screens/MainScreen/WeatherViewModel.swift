@@ -23,6 +23,7 @@ protocol IWeatherViewModel {
     var forecastDayWeather: (([ForecastDayWeather]) -> Void)? { get set }
     var forecastWeekWeather: (([ForecastWeekWeather]) -> Void)? { get set }
     var showToast: ((String) -> Void)? { get set }
+    var showAlert: (() -> Void)? { get set }
 }
 
 // MARK: - Class
@@ -34,6 +35,7 @@ final class WeatherViewModel: IWeatherViewModel {
     var forecastDayWeather: (([ForecastDayWeather]) -> Void)?
     var forecastWeekWeather: (([ForecastWeekWeather]) -> Void)?
     var showToast: ((String) -> Void)?
+    var showAlert: (() -> Void)?
     
     private let service = WeatherService()
     private let locationManager = LocationManager()
@@ -44,13 +46,17 @@ extension WeatherViewModel {
     
     func loadWeatherData() {
         if NetworkManager.shared.isConnected {
-            locationManager.getCurrentLocation { [weak self] coordinate in
+            locationManager.getCurrentLocation { [weak self] coordinate, permissionError in
                 if let coordinate {
                     self?.getCurrentWeather(coord: coordinate)
                     self?.getForecastDayWeather(coord: coordinate)
                     self?.getForecastWeekWeather(coord: coordinate)
                 } else {
-                    self?.showToast?(GlobalConstants.coordinatesError)
+                    if permissionError {
+                        self?.showAlert?()
+                    } else {
+                        self?.showToast?(GlobalConstants.coordinatesError)
+                    }
                 }
             }
         } else {

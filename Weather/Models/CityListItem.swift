@@ -12,4 +12,5 @@ struct CityListItem {
     let country: String
     let temp: Double
     let icon: String
+    let id: Int
 }

@@ -190,6 +190,7 @@ private extension WeatherViewController {
             make.top.equalToSuperview()
             make.left.equalToSuperview().offset(GlobalConstants.horizontalSpacing)
             make.right.equalToSuperview().inset(GlobalConstants.horizontalSpacing)
+            make.height.equalTo(GlobalConstants.headerSize)
         }
         
         cityInfoLabel.snp.makeConstraints { make in
@@ -206,6 +207,7 @@ private extension WeatherViewController {
         citiesButton.snp.makeConstraints { make in
             make.right.equalToSuperview()
             make.top.bottom.equalToSuperview()
+            make.width.equalTo(citiesButton.snp.height)
         }
         
         let tempView = WeatherInfoView()
@@ -404,6 +406,10 @@ private extension WeatherViewController {
         
         weatherViewModel.showToast = { [weak self] message in
             self?.view.makeToast(message)
+        }
+        
+        weatherViewModel.showAlert = { [weak self] in
+            self?.showSettingsAlert()
         }
     }
 }
