@@ -29,18 +29,22 @@ final class CityViewModel: ICityViewModel {
     var showToast: ((String) -> Void)?
     
     private let service = WeatherService()
-    private let locationManager = LocationManager()
     
     private let queue = DispatchQueue(label: .empty, attributes: .concurrent)
     private let dispatchGroup = DispatchGroup()
     
     private var cities = [CityListItem]()
     private var citiesInfo = [CityInfo]()
+    private var jsonArray: [[String: Any]] = []
+    
+    init() {
+        loadJSON()
+    }
 }
  
 extension CityViewModel {
     // MARK: - Methods
-    
+
     func loadCitiesData() {
         if NetworkManager.shared.isConnected {
             startDispatchGroup()
@@ -61,10 +65,9 @@ extension CityViewModel {
     
     func searchCities(name: String, completion: @escaping ([CityInfo]) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
-            let jsonArray = self.getCitiesArray()
-            var matchedCities = [CityInfo]()
+            var filteredCities = [CityInfo]()
             
-            for cityDict in jsonArray {
+            for cityDict in self.jsonArray {
                 if let cityName = cityDict["name"] as? String,
                    cityName.lowercased().contains(name.lowercased()) {
                     
@@ -72,14 +75,14 @@ extension CityViewModel {
                     if let jsonData = try? JSONSerialization.data(withJSONObject: cityDict),
                        let city = try? JSONDecoder().decode(CityInfo.self, from: jsonData) {
                         if !self.cities.map({ $0.id }).contains(city.id) { // если нет еще такого id
-                            matchedCities.append(city)
+                            filteredCities.append(city)
                         }
                     }
                 }
             }
             
             DispatchQueue.main.async {
-                completion(matchedCities)
+                completion(filteredCities)
             }
         }
     }
@@ -142,10 +145,25 @@ private extension CityViewModel {
         }
         
         dispatchGroup.notify(queue: .main) { [weak self] in
-            if var cities = self?.cities {
-                cities.sort { $0.name < $1.name }
-                self?.citiesData?(cities)
+            if let cities = self?.cities {
+                // сортируем в порядке добавления
+                let orderMap = Dictionary(uniqueKeysWithValues: (self?.citiesInfo.enumerated().map { ($1.id, $0) })!)
+                let sorted = cities.sorted { orderMap[$0.id, default: Int.max] < orderMap[$1.id, default: Int.max] }
+                
+                self?.citiesData?(sorted)
             }
+        }
+    }
+    
+    func loadJSON() {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let path = Bundle.main.path(forResource: "city.list", ofType: "json"),
+                  let data = try? Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe),
+                  let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+                return
+            }
+            
+            self?.jsonArray = jsonArray
         }
     }
 }
