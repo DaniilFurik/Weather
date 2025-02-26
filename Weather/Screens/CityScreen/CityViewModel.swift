@@ -123,16 +123,6 @@ private extension CityViewModel {
         return "?\(GlobalConstants.unitsParam)&\(GlobalConstants.cityIDParam)\(cityId)&\(GlobalConstants.appIDParam)"
     }
     
-    func getCitiesArray() -> [[String:Any]] {
-        guard let path = Bundle.main.path(forResource: "city.list", ofType: "json"),
-              let data = try? Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe),
-              let jsonArray = try? JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] else {
-            return [[:]]
-        }
-        
-        return jsonArray
-    }
-    
     func startDispatchGroup() {
         cities = []
         citiesInfo = StorageManager.shared.getCities()
